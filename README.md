@@ -1,15 +1,12 @@
 # Evil Twin Attack Detection in Non-Urban Terrain
 
-Machine learning pipeline for detecting Evil Twin Wi-Fi attacks from RSSI readings collected by four ESP32 sensors, and for localizing an ongoing attack (which point and which rogue antenna). Companion code for the accompanying thesis/article (see `docs/`).
+Machine learning pipeline for detecting Evil Twin Wi-Fi attacks from RSSI readings collected by four ESP32 sensors, and for localizing an ongoing attack (which point and which rogue antenna).
 
 ## Repository structure
 
 ```
 data/
   rssi_raw.csv                    Raw labeled RSSI readings (long format)
-docs/
-  materials_and_methods.md        Methodology write-up (Ukrainian)
-  materials_and_methods.docx      Same, as Word document
 notebooks/
   01_eda_and_prototyping.ipynb    Data exploration + first pass at every model
   02_final_comparison.ipynb       Consolidated GridSearchCV benchmark (54 configs) + final results
@@ -67,3 +64,6 @@ To run a notebook non-interactively from the command line, e.g.:
 cd notebooks/tuning
 jupyter nbconvert --to notebook --execute --inplace knn.ipynb
 ```
+
+## TODO
+Update with links after the publication
