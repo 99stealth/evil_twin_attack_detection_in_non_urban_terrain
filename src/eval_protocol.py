@@ -21,7 +21,12 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, ClassifierMixin, clone
-from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
+from sklearn.ensemble import (
+    ExtraTreesClassifier,
+    ExtraTreesRegressor,
+    RandomForestClassifier,
+    RandomForestRegressor,
+)
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     confusion_matrix,
@@ -37,7 +42,8 @@ from sklearn.model_selection import (
     RandomizedSearchCV,
     StratifiedKFold,
 )
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
+from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
@@ -52,9 +58,10 @@ try:
 except ImportError:  # pragma: no cover
     LGBMClassifier = None
 try:
-    from catboost import CatBoostClassifier
+    from catboost import CatBoostClassifier, CatBoostRegressor
 except ImportError:  # pragma: no cover
     CatBoostClassifier = None
+    CatBoostRegressor = None
 
 RANDOM_STATE = 42
 
@@ -81,6 +88,47 @@ def point_distance_m(i: int, j: int) -> float:
     d = min(abs(i - j), N_POINTS - abs(i - j))
     theta = np.deg2rad(45.0 * d)
     return 2 * POINT_RADIUS_M * np.sin(theta / 2)
+
+
+def point_xy_m(i: int) -> tuple[float, float]:
+    """Cartesian (x, y) in metres of point i (1..8), AP at the origin, east=+x,
+    north=+y, counter-clockwise from east."""
+    theta = np.deg2rad(45.0 * (i - 1))
+    return POINT_RADIUS_M * np.cos(theta), POINT_RADIUS_M * np.sin(theta)
+
+
+# Task A2 (R2.1/R2.2) geometry. AP at the origin; sensors on the axes at
+# SENSOR_DISTANCE_M from the AP (E, N, W, S).
+#
+# TODO: confirm sensor_1..sensor_4 -> E/N/W/S with Roman. The assignment below
+# is a provisional best guess from the two clearest axis-point signals
+# (diagnostic_sensor_direction_rssi(): at point 1 (E), s3 is ~11 dB stronger
+# than the next sensor; at point 3 (N), s2 is the clear strongest) with s1/s4
+# filled in by elimination — the point-5/point-7 evidence is noisier
+# (non-urban terrain: foliage/multipath don't follow simple free-space
+# distance law), so this is not cleanly resolved from the data alone.
+# R2.2(b) WCL and R2.2(c) trilateration are the only things that depend on
+# this mapping; their results are provisional until it is confirmed.
+SENSOR_DISTANCE_M = 6.0
+SENSOR_POSITIONS = {
+    "s1": (-SENSOR_DISTANCE_M, 0.0),  # provisional: West
+    "s2": (0.0, SENSOR_DISTANCE_M),   # provisional: North
+    "s3": (SENSOR_DISTANCE_M, 0.0),   # provisional: East
+    "s4": (0.0, -SENSOR_DISTANCE_M),  # provisional: South
+}
+SENSOR_POSITIONS_CONFIRMED = False
+
+# Expected chord error of a uniformly random point on the ring (R2.1 reference line).
+RANDOM_GUESS_ERROR_M = 4 * POINT_RADIUS_M / np.pi
+
+
+def diagnostic_sensor_direction_rssi(dataset: pd.DataFrame) -> pd.DataFrame:
+    """Median attack-RSSI per point per sensor (5s-resampled dataset) — use
+    this table to confirm/correct SENSOR_POSITIONS. At an axis point (1=E,
+    3=N, 5=W, 7=S) the co-located sensor (5m away) should read clearly
+    strongest, the opposite sensor (17m away) clearly weakest, and the two
+    perpendicular sensors (12.53m away) roughly tied in between."""
+    return dataset[dataset["attack"] == 1].groupby("point")[FEATURES_BASE].median()
 
 
 # --------------------------------------------------------------------------
@@ -463,6 +511,15 @@ def _make_model_configs() -> dict:
             "make": lambda: _CatBoostFlat(random_state=RANDOM_STATE, verbose=False, allow_writing_files=False, thread_count=1),
             "grid": {"n_estimators": [100, 200, 300], "max_depth": [3, 5, 7, 9], "learning_rate": [0.01, 0.1, 0.3], "l2_leaf_reg": [1, 3, 10]},
             "scale": False,
+        },
+        "MLP": {
+            "make": lambda: MLPClassifier(random_state=RANDOM_STATE, early_stopping=True, max_iter=2000),
+            "grid": {
+                "hidden_layer_sizes": [(32,), (64,), (64, 32), (128, 64)],
+                "alpha": [1e-4, 1e-3, 1e-2],
+                "learning_rate_init": [1e-3, 1e-2],
+            },
+            "scale": True,
         },
     }
     return cfgs
@@ -1234,3 +1291,390 @@ def plot_confusion(oof_true, oof_pred, labels, title, path=None, cmap="Blues",
     if path is not None:
         fig.savefig(path)
     return fig, cm
+
+
+# --------------------------------------------------------------------------
+# 8. Localization regression & baselines (Task A2: R2.1, R2.2)
+# --------------------------------------------------------------------------
+
+def _make_regressor_configs() -> dict:
+    cfgs = {
+        "Extra Trees": {
+            "make": lambda: ExtraTreesRegressor(random_state=RANDOM_STATE),
+            "grid": {"n_estimators": [100, 200, 300], "max_depth": [None, 10, 20, 30], "min_samples_leaf": [1, 2, 4], "max_features": ["sqrt", "log2", 1.0]},
+            "scale": False,
+        },
+        "Random Forest": {
+            "make": lambda: RandomForestRegressor(random_state=RANDOM_STATE),
+            "grid": {"n_estimators": [100, 200, 300], "max_depth": [None, 10, 20, 30], "min_samples_leaf": [1, 2, 4], "max_features": ["sqrt", "log2", 1.0]},
+            "scale": False,
+        },
+        "KNN": {
+            "make": lambda: KNeighborsRegressor(),
+            "grid": {"n_neighbors": list(range(1, 16)), "weights": ["uniform", "distance"], "metric": ["euclidean", "manhattan"]},
+            "scale": True,
+        },
+        "MLP": {
+            "make": lambda: MLPRegressor(random_state=RANDOM_STATE, early_stopping=True, max_iter=2000),
+            "grid": {
+                "hidden_layer_sizes": [(32,), (64,), (64, 32), (128, 64)],
+                "alpha": [1e-4, 1e-3, 1e-2],
+                "learning_rate_init": [1e-3, 1e-2],
+            },
+            "scale": True,
+        },
+        "CatBoost": {
+            # loss_function="MultiRMSE": CatBoost's native multi-output regression.
+            "make": lambda: CatBoostRegressor(
+                random_state=RANDOM_STATE, verbose=False, allow_writing_files=False,
+                thread_count=1, loss_function="MultiRMSE",
+            ),
+            "grid": {"n_estimators": [100, 200, 300], "max_depth": [3, 5, 7], "learning_rate": [0.01, 0.1, 0.3]},
+            "scale": False,
+        },
+    }
+    return cfgs
+
+
+REGRESSOR_CONFIGS = _make_regressor_configs()
+REGRESSOR_RANDOMIZED = {"MLP", "CatBoost"}
+
+
+def make_localization_scorer(variant: str):
+    """A scorer(estimator, X, y) callable for GridSearchCV/RandomizedSearchCV
+    that scores by *physical* localization error (metres), not RMSE —
+    negated, since sklearn always maximizes the score. variant="xy": y is
+    already (x, y). variant="angle": y is (cos theta, sin theta); the
+    prediction is projected onto the R=POINT_RADIUS_M ring before scoring
+    (the ring-prior specific to this dataset, see nested_cv_regression)."""
+    def scorer(estimator, X, y):
+        y_pred = np.asarray(estimator.predict(X))
+        y_true = np.asarray(y)
+        if variant == "angle":
+            theta_p = np.arctan2(y_pred[:, 1], y_pred[:, 0])
+            xp, yp = POINT_RADIUS_M * np.cos(theta_p), POINT_RADIUS_M * np.sin(theta_p)
+            theta_t = np.arctan2(y_true[:, 1], y_true[:, 0])
+            xt, yt = POINT_RADIUS_M * np.cos(theta_t), POINT_RADIUS_M * np.sin(theta_t)
+            err = np.sqrt((xp - xt) ** 2 + (yp - yt) ** 2)
+        else:
+            err = np.sqrt(((y_true - y_pred) ** 2).sum(axis=1))
+        return -float(np.mean(err))
+    return scorer
+
+
+def make_regressor(model_name: str, params: dict | None = None):
+    """Analogous to make_estimator(), for REGRESSOR_CONFIGS."""
+    cfg = REGRESSOR_CONFIGS[model_name]
+    params = dict(params or {})
+    base = cfg["make"]()
+    if cfg["scale"]:
+        pipe = Pipeline([("scaler", StandardScaler()), ("model", base)])
+        if params:
+            pipe.set_params(**params)
+        return pipe
+    if params:
+        base.set_params(**params)
+    return base
+
+
+def _regressor_search_space(model_name: str) -> dict:
+    cfg = REGRESSOR_CONFIGS[model_name]
+    if cfg["scale"]:
+        return {f"model__{k}": v for k, v in cfg["grid"].items()}
+    return cfg["grid"]
+
+
+def get_regression_outer_cv_and_groups(protocol: str, df_attack: pd.DataFrame):
+    """LOPO (groups=point, 8 folds): the held-out position is never seen —
+    an interpolation test on the ring (its two ±45 deg neighbours are always
+    in training). LOAO (groups=antenna, 6 folds): positions are all seen,
+    only the antenna hardware is held out."""
+    if protocol == "LOPO":
+        return LeaveOneGroupOut(), df_attack["point"].to_numpy()
+    if protocol == "LOAO":
+        return LeaveOneGroupOut(), df_attack["antenna"].to_numpy()
+    raise ValueError(f"Unknown regression protocol: {protocol}")
+
+
+def nested_cv_regression(
+    model_name: str,
+    X: pd.DataFrame,
+    y_xy: np.ndarray,
+    groups: np.ndarray,
+    outer_cv,
+    inner_cv_factory: Callable[[np.ndarray], object],
+    variant: str = "xy",
+) -> dict:
+    """Nested CV for (x, y) localization regression — the regression analogue
+    of nested_cv(). variant="xy": regress (x, y) directly. variant="angle":
+    regress (cos theta, sin theta) and project every prediction onto the
+    R=POINT_RADIUS_M ring — a prior specific to this dataset (all attack
+    positions lie on one ring), not a general deployment assumption; state
+    this wherever variant="angle" results are reported.
+
+    Asserts no group overlap in every outer AND inner split, exactly like
+    nested_cv() (acceptance check: LOPO's held-out point never touches
+    training, outer or inner).
+    """
+    X = X.reset_index(drop=True)
+    y_xy = np.asarray(y_xy, dtype=float)
+    groups = np.asarray(groups)
+    n = len(y_xy)
+
+    if variant == "angle":
+        theta = np.arctan2(y_xy[:, 1], y_xy[:, 0])
+        y_target = np.column_stack([np.cos(theta), np.sin(theta)])
+    elif variant == "xy":
+        y_target = y_xy
+    else:
+        raise ValueError(f"Unknown variant: {variant}")
+
+    oof_pred_xy = np.full((n, 2), np.nan)
+    fold_mean_errors = []
+    best_params_per_fold = []
+
+    space = _regressor_search_space(model_name)
+    use_randomized = model_name in REGRESSOR_RANDOMIZED
+    scorer = make_localization_scorer(variant)
+
+    for fold_i, (train_idx, test_idx) in enumerate(outer_cv.split(X, y_target, groups)):
+        _assert_no_group_overlap(groups, train_idx, test_idx, f"{model_name} regression outer fold {fold_i}")
+
+        X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
+        y_train = y_target[train_idx]
+        g_train = groups[train_idx]
+
+        inner_cv = inner_cv_factory(g_train)
+        for in_tr, in_te in inner_cv.split(X_train, y_train, g_train):
+            _assert_no_group_overlap(g_train, in_tr, in_te, f"{model_name} regression outer fold {fold_i} inner split")
+
+        estimator = make_regressor(model_name)
+        search_cls = RandomizedSearchCV if use_randomized else GridSearchCV
+        search_kwargs = dict(cv=inner_cv, scoring=scorer, n_jobs=-1)
+        if use_randomized:
+            search_kwargs.update(n_iter=RANDOMIZED_SEARCH_N_ITER, random_state=RANDOM_STATE)
+        search = search_cls(estimator, space, **search_kwargs)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            search.fit(X_train, y_train, groups=g_train)
+
+        best = search.best_estimator_
+        pred = np.asarray(best.predict(X_test))
+        if variant == "angle":
+            theta_p = np.arctan2(pred[:, 1], pred[:, 0])
+            pred_xy = np.column_stack([POINT_RADIUS_M * np.cos(theta_p), POINT_RADIUS_M * np.sin(theta_p)])
+        else:
+            pred_xy = pred
+        oof_pred_xy[test_idx] = pred_xy
+
+        fold_err = np.sqrt(((y_xy[test_idx] - pred_xy) ** 2).sum(axis=1))
+        fold_mean_errors.append(float(fold_err.mean()))
+        best_params_per_fold.append(search.best_params_)
+
+    oof_errors_m = np.sqrt(((y_xy - oof_pred_xy) ** 2).sum(axis=1))
+    return {
+        "oof_true_xy": y_xy,
+        "oof_pred_xy": oof_pred_xy,
+        "oof_errors_m": oof_errors_m,
+        "fold_mean_errors_m": fold_mean_errors,
+        "best_params_per_fold": best_params_per_fold,
+        "groups": groups,
+    }
+
+
+def regression_error_summary(errors_m) -> dict:
+    e = np.asarray(errors_m, dtype=float)
+    return {
+        "mean_error_m": float(e.mean()),
+        "median_error_m": float(np.median(e)),
+        "p90_error_m": float(np.percentile(e, 90)),
+        "n": int(len(e)),
+    }
+
+
+def session_level_localization_error(oof_true_xy, oof_pred_xy, sessions) -> tuple[np.ndarray, pd.DataFrame]:
+    """Mean predicted (x, y) per session vs. that session's (constant) true
+    position — the regression analogue of session_level_accuracy()."""
+    oof_true_xy = np.asarray(oof_true_xy)
+    oof_pred_xy = np.asarray(oof_pred_xy)
+    df = pd.DataFrame({
+        "session": np.asarray(sessions),
+        "tx": oof_true_xy[:, 0], "ty": oof_true_xy[:, 1],
+        "px": oof_pred_xy[:, 0], "py": oof_pred_xy[:, 1],
+    })
+    agg = df.groupby("session").agg(tx=("tx", "first"), ty=("ty", "first"), px=("px", "mean"), py=("py", "mean"))
+    errors = np.sqrt((agg["tx"] - agg["px"]) ** 2 + (agg["ty"] - agg["py"]) ** 2).to_numpy()
+    return errors, agg.reset_index()
+
+
+def xy_cluster_bootstrap_ci(true_xy, pred_xy, cluster_ids, n_boot: int = 2000, seed: int = 0,
+                             metric: str = "mean") -> dict:
+    """cluster_bootstrap_ci, specialised for (x, y) localization error arrays
+    instead of classification labels (same session-resampling guarantee —
+    resamples clusters, never rows)."""
+    metric_fn = {
+        "mean": lambda te, pe: float(np.sqrt(((te - pe) ** 2).sum(axis=1)).mean()),
+        "median": lambda te, pe: float(np.median(np.sqrt(((te - pe) ** 2).sum(axis=1)))),
+        "p90": lambda te, pe: float(np.percentile(np.sqrt(((te - pe) ** 2).sum(axis=1)), 90)),
+    }[metric]
+
+    true_xy = np.asarray(true_xy)
+    pred_xy = np.asarray(pred_xy)
+    cluster_ids = np.asarray(cluster_ids)
+    clusters = np.unique(cluster_ids)
+    n = len(clusters)
+    cluster_to_idx = {c: np.where(cluster_ids == c)[0] for c in clusters}
+
+    rng = np.random.default_rng(seed)
+    stats = np.empty(n_boot)
+    for i in range(n_boot):
+        sampled = rng.choice(clusters, size=n, replace=True)
+        idx = np.concatenate([cluster_to_idx[c] for c in sampled])
+        stats[i] = metric_fn(true_xy[idx], pred_xy[idx])
+
+    return {
+        "ci_low": float(np.nanpercentile(stats, 2.5)),
+        "ci_high": float(np.nanpercentile(stats, 97.5)),
+        "boot_mean": float(np.nanmean(stats)),
+        "boot_std": float(np.nanstd(stats)),
+    }
+
+
+# --- R2.2(a): nearest centroid --------------------------------------------
+
+def nearest_centroid_oof(X: pd.DataFrame, y_point: np.ndarray, groups: np.ndarray, outer_cv) -> dict:
+    """R2.2(a): standardize on train, predict the nearest class centroid
+    (Euclidean, in standardized feature space). No hyperparameters to tune,
+    so this is a plain OOF loop (still asserts no outer-fold group overlap).
+    Under LOPO the held-out point's centroid never exists, so it can never be
+    predicted — its error is always >= the adjacent-point chord (8.42 m)."""
+    X = X.reset_index(drop=True)
+    y_point = np.asarray(y_point)
+    groups = np.asarray(groups)
+    n = len(y_point)
+    oof_pred_point = np.full(n, -1, dtype=int)
+
+    for fold_i, (train_idx, test_idx) in enumerate(outer_cv.split(X, y_point, groups)):
+        _assert_no_group_overlap(groups, train_idx, test_idx, f"nearest-centroid outer fold {fold_i}")
+
+        scaler = StandardScaler().fit(X.iloc[train_idx])
+        Xs_train = scaler.transform(X.iloc[train_idx])
+        Xs_test = scaler.transform(X.iloc[test_idx])
+
+        y_train = y_point[train_idx]
+        classes = np.unique(y_train)
+        centroids = np.array([Xs_train[y_train == c].mean(axis=0) for c in classes])
+
+        dists = np.linalg.norm(Xs_test[:, None, :] - centroids[None, :, :], axis=2)  # (n_test, n_classes)
+        oof_pred_point[test_idx] = classes[np.argmin(dists, axis=1)]
+
+    oof_pred_xy = np.array([point_xy_m(int(p)) for p in oof_pred_point])
+    return {"oof_true_point": y_point, "oof_pred_point": oof_pred_point, "oof_pred_xy": oof_pred_xy, "groups": groups}
+
+
+# --- R2.2(b): weighted centroid localization (WCL), no training -----------
+
+def wcl_predict_xy(df: pd.DataFrame, sensor_cols: list[str] = FEATURES_BASE,
+                    sensor_positions: dict | None = None, project_to_ring: bool = False) -> np.ndarray:
+    """R2.2(b): position estimate = sum_k w_k p_k / sum_k w_k, weights
+    w_k = 10^(RSSI_k/10) (linear power). Training-free. project_to_ring=True
+    additionally projects onto the R=POINT_RADIUS_M ring along the estimated
+    direction (WCL's raw estimate is always inside the sensor polygon, i.e.
+    biased toward the origin relative to the true R=11m ring)."""
+    sensor_positions = sensor_positions or SENSOR_POSITIONS
+    rssi = df[sensor_cols].to_numpy(dtype=float)
+    w = np.power(10.0, rssi / 10.0)
+    pos = np.array([sensor_positions[c] for c in sensor_cols])  # (k, 2)
+    xy = (w @ pos) / w.sum(axis=1, keepdims=True)
+    if project_to_ring:
+        theta = np.arctan2(xy[:, 1], xy[:, 0])
+        xy = np.column_stack([POINT_RADIUS_M * np.cos(theta), POINT_RADIUS_M * np.sin(theta)])
+    return xy
+
+
+# --- R2.2(c): log-distance trilateration with unknown transmit power ------
+
+def _trilateration_grid(bound: float = 15.0, step: float = 0.25) -> np.ndarray:
+    coords = np.arange(-bound, bound + step / 2, step)
+    gx, gy = np.meshgrid(coords, coords)
+    return np.column_stack([gx.ravel(), gy.ravel()])
+
+
+def trilaterate_xy(rssi: np.ndarray, n_exp: float, sensor_cols: list[str] = FEATURES_BASE,
+                    sensor_positions: dict | None = None, grid: np.ndarray | None = None) -> np.ndarray:
+    """R2.2(c): RSSI_k = P0 - 10*n*log10(||p - p_k||); for a candidate p, P0
+    has the closed-form least-squares estimate mean_k(RSSI_k + 10*n*log10(d_k)).
+    Grid-searches p over `grid` (default: 0.25m grid on [-15, 15]^2) to
+    minimize the residual sum of squares, for every row of `rssi` at once —
+    vectorized via the algebraic identity
+    ||c + b||^2 = ||c||^2 + 2*b.c + ||b||^2 where c depends only on
+    (grid, n_exp) and b only on the row's RSSI, avoiding an O(rows x grid x
+    sensors) tensor.
+    """
+    sensor_positions = sensor_positions or SENSOR_POSITIONS
+    grid = _trilateration_grid() if grid is None else grid
+    pos = np.array([sensor_positions[c] for c in sensor_cols])  # (k, 2)
+
+    d = np.linalg.norm(grid[:, None, :] - pos[None, :, :], axis=2)  # (M, k)
+    d = np.maximum(d, 0.1)
+    logd = np.log10(d)  # (M, k)
+    mean_logd = logd.mean(axis=1)  # (M,)
+    c = 10.0 * n_exp * (mean_logd[:, None] - logd)  # (M, k)
+    C = (c ** 2).sum(axis=1)  # (M,)
+
+    rssi = np.atleast_2d(np.asarray(rssi, dtype=float))  # (rows, k)
+    mean_rssi = rssi.mean(axis=1)  # (rows,)
+    b = mean_rssi[:, None] - rssi  # (rows, k)
+    B = (b ** 2).sum(axis=1)  # (rows,)
+
+    residuals = C[None, :] + 2.0 * (b @ c.T) + B[:, None]  # (rows, M)
+    best_idx = np.argmin(residuals, axis=1)
+    return grid[best_idx]
+
+
+def fit_trilateration_n(rssi: np.ndarray, true_xy: np.ndarray, sensor_cols: list[str] = FEATURES_BASE,
+                         sensor_positions: dict | None = None, grid: np.ndarray | None = None,
+                         n_range=np.arange(1.5, 4.01, 0.1)) -> tuple[float, float]:
+    """R2.2(c): fit the path-loss exponent n on training rows by grid search,
+    minimizing mean localization error. Returns (best_n, best_mean_error_m)."""
+    true_xy = np.asarray(true_xy)
+    best_n, best_err = None, np.inf
+    for n_exp in n_range:
+        pred = trilaterate_xy(rssi, float(n_exp), sensor_cols=sensor_cols, sensor_positions=sensor_positions, grid=grid)
+        err = float(np.sqrt(((true_xy - pred) ** 2).sum(axis=1)).mean())
+        if err < best_err:
+            best_n, best_err = float(n_exp), err
+    return best_n, best_err
+
+
+def trilateration_oof(df: pd.DataFrame, y_xy: np.ndarray, groups: np.ndarray, outer_cv,
+                       sensor_cols: list[str] = FEATURES_BASE, sensor_positions: dict | None = None,
+                       fit_n: bool = True, fixed_n: float = 2.0) -> dict:
+    """R2.2(c) as an OOF loop matching the rest of the framework: for each
+    outer fold, optionally fit n on the training rows (`fit_trilateration_n`),
+    then trilaterate the held-out rows with that n (or with `fixed_n` if
+    fit_n=False). No inner CV — n-fitting *is* the only "training" here."""
+    rssi_all = df[sensor_cols].to_numpy(dtype=float)
+    y_xy = np.asarray(y_xy, dtype=float)
+    groups = np.asarray(groups)
+    n = len(y_xy)
+    grid = _trilateration_grid()
+
+    oof_pred_xy = np.full((n, 2), np.nan)
+    n_per_fold = []
+
+    for fold_i, (train_idx, test_idx) in enumerate(outer_cv.split(df, y_xy, groups)):
+        _assert_no_group_overlap(groups, train_idx, test_idx, f"trilateration outer fold {fold_i}")
+        if fit_n:
+            best_n, _ = fit_trilateration_n(
+                rssi_all[train_idx], y_xy[train_idx], sensor_cols=sensor_cols,
+                sensor_positions=sensor_positions, grid=grid,
+            )
+        else:
+            best_n = fixed_n
+        n_per_fold.append(best_n)
+        oof_pred_xy[test_idx] = trilaterate_xy(
+            rssi_all[test_idx], best_n, sensor_cols=sensor_cols, sensor_positions=sensor_positions, grid=grid,
+        )
+
+    return {"oof_true_xy": y_xy, "oof_pred_xy": oof_pred_xy, "n_per_fold": n_per_fold, "groups": groups}
