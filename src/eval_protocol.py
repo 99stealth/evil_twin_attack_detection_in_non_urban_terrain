@@ -224,6 +224,58 @@ def build_dataset(
     return dataset, info
 
 
+def build_dataset_scan_cycle(
+    raw: pd.DataFrame, tolerance_seconds: float = 3.6
+) -> tuple[pd.DataFrame, DatasetInfo]:
+    """V7 option (a): align on the anchor sensor's own scan cycle instead of
+    a resampling grid, with no imputation.
+
+    For each scan of the first sensor (by device name), take the nearest scan
+    of every other sensor within +/- tolerance_seconds; the row is dropped if
+    any sensor has no scan in that window (`merge_asof(..., tolerance=...)`
+    leaves those as NaN, then `dropna()`).
+    """
+    grouped = add_groups(raw)
+    device_names = sorted(raw["deviceID"].unique())
+    sensor_cols = [f"s{i}" for i in range(1, len(device_names) + 1)]
+    tol = pd.Timedelta(seconds=tolerance_seconds)
+
+    anchor_dev = device_names[0]
+    merged = (
+        raw.loc[raw["deviceID"] == anchor_dev, ["time", "value"]]
+        .sort_values("time")
+        .rename(columns={"value": sensor_cols[0]})
+    )
+    for dev, col in zip(device_names[1:], sensor_cols[1:]):
+        other = (
+            raw.loc[raw["deviceID"] == dev, ["time", "value"]]
+            .sort_values("time")
+            .rename(columns={"value": col})
+        )
+        merged = pd.merge_asof(merged.sort_values("time"), other, on="time", direction="nearest", tolerance=tol)
+    merged = merged.dropna().reset_index(drop=True)
+
+    labels = (
+        grouped[["time", "point", "attack", "antenna", "session", "block"]]
+        .drop_duplicates("time")
+        .sort_values("time")
+    )
+    dataset = pd.merge_asof(merged.sort_values("time"), labels, on="time", direction="nearest")
+    dataset = dataset[["time"] + sensor_cols + ["point", "attack", "antenna", "session", "block"]]
+
+    rows_per_session = dataset.groupby("session").size()
+    info = DatasetInfo(
+        freq=f"scan_cycle(anchor={anchor_dev}, tol={tolerance_seconds}s)",
+        n_rows=len(dataset),
+        n_attack_rows=int((dataset["attack"] == 1).sum()),
+        n_sessions_attack=int(dataset.loc[dataset["attack"] == 1, "session"].nunique()),
+        imputed_share={c: 0.0 for c in sensor_cols},
+        rows_per_session=rows_per_session,
+        impute="scan_cycle",
+    )
+    return dataset, info
+
+
 def add_fe(df: pd.DataFrame, sensor_cols: list[str] | None = None) -> pd.DataFrame:
     """Add pairwise deltas + row-wise aggregates computed from a single snapshot."""
     df = df.copy()
@@ -822,6 +874,40 @@ def locked_holdout_eval(
     return metrics
 
 
+def select_best_model_on_dev(
+    task: str,
+    X_dev, y_dev, groups_dev,
+    is_multiclass: bool,
+    model_names: list[str] | None = None,
+    inner_cv_factory=None,
+) -> tuple[str, dict]:
+    """V1 (F1 fix): rank models by nested-CV pooled accuracy computed
+    *entirely* on the dev split, so the model choice for a locked hold-out
+    design cannot see the held-out test data.
+
+    This function's signature has no X_test/y_test/sessions_test parameter at
+    all, so there is nothing to leak through by construction. The runtime
+    guarantee that the held-out sessions are never touched lives in
+    `locked_holdout_eval` (called separately, per model, to actually score on
+    the locked test set), which asserts `assert_no_session_overlap` before
+    doing anything else — that is the "assertion added to locked_holdout_eval"
+    referenced in the F1 acceptance check.
+
+    Returns (best_model_name, {model_name: dev_pooled_acc}).
+    """
+    model_names = model_names or list(MODEL_CONFIGS.keys())
+    inner_cv_factory = inner_cv_factory or group_kfold_inner_factory(5)
+    outer_cv = LeaveOneGroupOut()
+
+    dev_scores = {}
+    for model_name in model_names:
+        res = nested_cv(model_name, X_dev, y_dev, groups_dev, outer_cv, inner_cv_factory, is_multiclass=is_multiclass)
+        dev_scores[model_name] = summarize(res, task)["pooled_acc"]
+
+    best_model = max(dev_scores, key=dev_scores.get)
+    return best_model, dev_scores
+
+
 def mode_best_params(best_params_df: pd.DataFrame, model: str, task_label: str, feature_set: str) -> dict:
     """Most frequent best_params_ for (model, task, feature set) from a
     `results/best_params.csv`-shaped DataFrame produced by 02_final_comparison
@@ -932,6 +1018,50 @@ def session_level_accuracy(y_true, y_pred, sessions) -> tuple[float, pd.DataFram
     return acc, out
 
 
+def localization_error_summary(y_true, y_pred, sessions=None) -> dict:
+    """F5: mean/median Point Prediction localization error in metres
+    (`point_distance_m`, chord on the 11m circle), the share of predictions
+    that are exact / adjacent (8.42m) / farther, and — if `sessions` is
+    given — the same after a session-level majority vote (`session_level_accuracy`)."""
+    y_true = np.asarray(y_true)
+    y_pred = np.asarray(y_pred)
+    errors = np.array([point_distance_m(int(t), int(p)) for t, p in zip(y_true, y_pred)])
+    adjacent_m = point_distance_m(1, 2)  # 8.42 m — the chord between any adjacent pair of points
+
+    def _bucket_shares(errs):
+        exact = float(np.mean(errs == 0))
+        adjacent = float(np.mean(np.isclose(errs, adjacent_m)))
+        farther = float(np.mean(errs > adjacent_m + 1e-6))
+        return exact, adjacent, farther
+
+    exact, adjacent, farther = _bucket_shares(errors)
+    out = {
+        "mean_error_m": float(errors.mean()),
+        "median_error_m": float(np.median(errors)),
+        "share_exact": exact,
+        "share_adjacent": adjacent,
+        "share_farther": farther,
+        "n": int(len(errors)),
+    }
+
+    if sessions is not None:
+        _, session_tbl = session_level_accuracy(y_true, y_pred, sessions)
+        session_errors = np.array([
+            point_distance_m(int(t), int(p))
+            for t, p in zip(session_tbl["y_true"], session_tbl["y_pred"])
+        ])
+        s_exact, s_adjacent, s_farther = _bucket_shares(session_errors)
+        out["session"] = {
+            "mean_error_m": float(session_errors.mean()),
+            "median_error_m": float(np.median(session_errors)),
+            "share_exact": s_exact,
+            "share_adjacent": s_adjacent,
+            "share_farther": s_farther,
+            "n": int(len(session_errors)),
+        }
+    return out
+
+
 def sliding_window_accuracy(y_true, y_pred, sessions, window_sizes=(1, 2, 3, 6, 12)) -> dict:
     """Accuracy of a causal majority vote over the trailing w rows of the same
     session (partial windows at a session's start use whatever rows exist)."""
@@ -950,6 +1080,20 @@ def sliding_window_accuracy(y_true, y_pred, sessions, window_sizes=(1, 2, 3, 6, 
     return out
 
 
+def _full_window_alarm_flags(preds: np.ndarray, w: int) -> np.ndarray:
+    """Boolean array, one per row of `preds` (a single session's predictions,
+    in time order): True at row t iff the *full* trailing window of w rows
+    (t-w+1..t) is entirely predicted attack. The first w-1 rows of a session
+    can never fire (there isn't yet a full same-session window)."""
+    n = len(preds)
+    flags = np.zeros(n, dtype=bool)
+    for t in range(n):
+        window = preds[max(0, t - w + 1): t + 1]
+        if len(window) == w and np.all(window == 1):
+            flags[t] = True
+    return flags
+
+
 def false_alarm_rate_per_hour(y_true, y_pred, sessions, freq_seconds: float,
                                window_sizes=(1, 2, 3)) -> tuple[dict, float]:
     """Attack-only false-alarm rate on attack-free (y_true==0) rows: an alarm
@@ -963,13 +1107,51 @@ def false_alarm_rate_per_hour(y_true, y_pred, sessions, freq_seconds: float,
     for w in window_sizes:
         alarms = 0
         for _, g in no_attack.groupby("session"):
-            preds = g["y_pred"].to_numpy()
-            for t in range(len(preds)):
-                window = preds[max(0, t - w + 1): t + 1]
-                if len(window) == w and np.all(window == 1):
-                    alarms += 1
+            alarms += int(_full_window_alarm_flags(g["y_pred"].to_numpy(), w).sum())
         rates[w] = alarms / total_hours if total_hours > 0 else float("nan")
     return rates, total_hours
+
+
+def attack_detection_sensitivity(y_true, y_pred, sessions, freq_seconds: float,
+                                  window_sizes=(1, 2, 3)) -> dict:
+    """F3: the cost side of the false-alarm rate, under the same full-window
+    alarm rule (`_full_window_alarm_flags`) — for each w:
+
+    - detection_rate: share of attack sessions with >=1 alarm during the session;
+    - median_delay_s: median, over *detected* sessions, of the time from the
+      session's first row to its first alarm (assumes rows are on a
+      `freq_seconds` grid within a session, i.e. delay = alarm_row_index * freq_seconds);
+    - row_recall: fraction of true-attack rows (y_true==1, anywhere, not just
+      within attack sessions' own window) whose windowed alarm flag is True.
+    """
+    df = pd.DataFrame({"y_true": np.asarray(y_true), "y_pred": np.asarray(y_pred), "session": np.asarray(sessions)})
+
+    out = {}
+    for w in window_sizes:
+        alarm_flags = np.zeros(len(df), dtype=bool)
+        delays = []
+        n_attack_sessions = 0
+        n_detected = 0
+        for sid, g in df.groupby("session"):
+            is_attack_session = bool((g["y_true"] == 1).any())
+            local_flags = _full_window_alarm_flags(g["y_pred"].to_numpy(), w)
+            alarm_flags[g.index.to_numpy()] = local_flags
+            if is_attack_session:
+                n_attack_sessions += 1
+                fired = np.where(local_flags)[0]
+                if len(fired) > 0:
+                    n_detected += 1
+                    delays.append(float(fired[0]) * freq_seconds)
+
+        is_true_attack = df["y_true"].to_numpy() == 1
+        out[w] = {
+            "detection_rate": n_detected / n_attack_sessions if n_attack_sessions else float("nan"),
+            "median_delay_s": float(np.median(delays)) if delays else float("nan"),
+            "row_recall": float(alarm_flags[is_true_attack].mean()) if is_true_attack.any() else float("nan"),
+            "n_attack_sessions": n_attack_sessions,
+            "n_detected": n_detected,
+        }
+    return out
 
 
 # --- V6: session-level permutation test -------------------------------------
@@ -1031,7 +1213,11 @@ def session_permutation_test(
     }
 
 
-def plot_confusion(oof_true, oof_pred, labels, title, path=None, cmap="Blues", tick_labels=None):
+def plot_confusion(oof_true, oof_pred, labels, title, path=None, cmap="Blues",
+                    tick_labels=None, paper: bool = False):
+    """paper=True (F4): no title at all (no task name, no model name, no
+    suptitle) — axis labels only ("Predicted"/"Actual"), for camera-ready
+    figures. paper=False (default) keeps the full internal title."""
     import matplotlib.pyplot as plt
     import seaborn as sns
 
@@ -1042,7 +1228,8 @@ def plot_confusion(oof_true, oof_pred, labels, title, path=None, cmap="Blues", t
                 xticklabels=display_labels, yticklabels=display_labels)
     ax.set_xlabel("Predicted")
     ax.set_ylabel("Actual")
-    ax.set_title(title)
+    if not paper:
+        ax.set_title(title)
     plt.tight_layout()
     if path is not None:
         fig.savefig(path)
