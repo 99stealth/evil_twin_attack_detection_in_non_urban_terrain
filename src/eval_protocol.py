@@ -13,6 +13,7 @@ labels so that no session straddles a train/test boundary.
 """
 from __future__ import annotations
 
+import itertools
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
@@ -100,23 +101,26 @@ def point_xy_m(i: int) -> tuple[float, float]:
 # Task A2 (R2.1/R2.2) geometry. AP at the origin; sensors on the axes at
 # SENSOR_DISTANCE_M from the AP (E, N, W, S).
 #
-# TODO: confirm sensor_1..sensor_4 -> E/N/W/S with Roman. The assignment below
-# is a provisional best guess from the two clearest axis-point signals
-# (diagnostic_sensor_direction_rssi(): at point 1 (E), s3 is ~11 dB stronger
-# than the next sensor; at point 3 (N), s2 is the clear strongest) with s1/s4
-# filled in by elimination — the point-5/point-7 evidence is noisier
-# (non-urban terrain: foliage/multipath don't follow simple free-space
-# distance law), so this is not cleanly resolved from the data alone.
-# R2.2(b) WCL and R2.2(c) trilateration are the only things that depend on
-# this mapping; their results are provisional until it is confirmed.
+# SENSOR_POSITIONS is inferred from data, not from the author's recollection
+# (which could not be confirmed — see TASK_A2_fix / sensor_mapping_scores()).
+# All 24 permutations of sensor_1..4 -> {E,N,W,S} were scored by the mean
+# Pearson correlation between median attack RSSI and -log10(distance from the
+# attack point to the sensor), averaged over the 48 (point, antenna)
+# sessions. Best: s1=N, s2=S, s3=E, s4=W, score 0.479 (0.450 restricted to
+# the two omnidirectional antennas). The author's recollection
+# (s1=E, s2=W, s3=N, s4=S) scored -0.201; the opposite pairs (1-2, 3-4) match
+# that recollection, so the axes appear rotated 90 deg relative to it.
 SENSOR_DISTANCE_M = 6.0
 SENSOR_POSITIONS = {
-    "s1": (-SENSOR_DISTANCE_M, 0.0),  # provisional: West
-    "s2": (0.0, SENSOR_DISTANCE_M),   # provisional: North
-    "s3": (SENSOR_DISTANCE_M, 0.0),   # provisional: East
-    "s4": (0.0, -SENSOR_DISTANCE_M),  # provisional: South
+    "s1": (0.0, SENSOR_DISTANCE_M),    # North
+    "s2": (0.0, -SENSOR_DISTANCE_M),   # South
+    "s3": (SENSOR_DISTANCE_M, 0.0),    # East
+    "s4": (-SENSOR_DISTANCE_M, 0.0),   # West
 }
+# Inferred from data (best of 24 permutations, mean corr(RSSI, -log10 d) = 0.479);
+# the author's recollection of the mapping could not be confirmed. See sensor_mapping_scores().
 SENSOR_POSITIONS_CONFIRMED = False
+SENSOR_POSITIONS_SOURCE = "inferred_from_data"
 
 # Expected chord error of a uniformly random point on the ring (R2.1 reference line).
 RANDOM_GUESS_ERROR_M = 4 * POINT_RADIUS_M / np.pi
@@ -129,6 +133,71 @@ def diagnostic_sensor_direction_rssi(dataset: pd.DataFrame) -> pd.DataFrame:
     strongest, the opposite sensor (17m away) clearly weakest, and the two
     perpendicular sensors (12.53m away) roughly tied in between."""
     return dataset[dataset["attack"] == 1].groupby("point")[FEATURES_BASE].median()
+
+
+_DIRECTION_XY = {
+    "N": (0.0, SENSOR_DISTANCE_M),
+    "S": (0.0, -SENSOR_DISTANCE_M),
+    "E": (SENSOR_DISTANCE_M, 0.0),
+    "W": (-SENSOR_DISTANCE_M, 0.0),
+}
+
+
+def sensor_mapping_scores(raw: pd.DataFrame) -> pd.DataFrame:
+    """Score all 24 permutations of sensor_1..4 -> {E, N, W, S} by how well
+    they explain the observed attack RSSI, to infer SENSOR_POSITIONS from
+    data instead of relying on an unconfirmed recollection.
+
+    For each (point, antenna) attack session (48 total) and each candidate
+    permutation: take the median RSSI per sensor over that session's *raw*
+    scans, and compute the Pearson correlation, across the 4 sensors,
+    between that median RSSI and -log10(distance from the attack point to
+    the candidate sensor position) — the sign log-distance path loss
+    predicts (closer -> stronger RSSI -> larger -log10(d)). `score_all` is
+    the mean of that per-session correlation over all 48 sessions;
+    `score_omni` restricts it to the two omnidirectional antennas (1, 2:
+    ARS-N05, ARS-N19), where a directional antenna's radiation pattern can't
+    distort the distance relationship.
+
+    Returns a DataFrame with columns `mapping` (the directions of s1..s4,
+    e.g. "NSEW"), `score_all`, `score_omni`, sorted by `score_all` descending.
+    """
+    grouped = add_groups(raw)
+    attack = grouped[grouped["attack"] == 1]
+    device_names = sorted(raw["deviceID"].unique())
+    sensor_cols = [f"s{i}" for i in range(1, len(device_names) + 1)]
+    dev_to_col = {dev: col for dev, col in zip(device_names, sensor_cols)}
+
+    med = attack.groupby(["point", "antenna", "deviceID"])["value"].median().reset_index()
+    med["sensor"] = med["deviceID"].map(dev_to_col)
+    wide = med.pivot(index=["point", "antenna"], columns="sensor", values="value").reset_index()
+    wide = wide.dropna(subset=sensor_cols)
+
+    rows = []
+    for perm in itertools.permutations("NSEW"):
+        mapping_str = "".join(perm)
+        sensor_xy = {col: np.array(_DIRECTION_XY[d]) for col, d in zip(sensor_cols, perm)}
+
+        corrs_all, corrs_omni = [], []
+        for _, session_row in wide.iterrows():
+            point_xy = np.array(point_xy_m(int(session_row["point"])))
+            dists = np.array([np.linalg.norm(point_xy - sensor_xy[c]) for c in sensor_cols])
+            rssi = session_row[sensor_cols].to_numpy(dtype=float)
+            neg_log_d = -np.log10(dists)
+            if np.std(rssi) == 0 or np.std(neg_log_d) == 0:
+                continue
+            r = float(np.corrcoef(rssi, neg_log_d)[0, 1])
+            corrs_all.append(r)
+            if int(session_row["antenna"]) in (1, 2):
+                corrs_omni.append(r)
+
+        rows.append({
+            "mapping": mapping_str,
+            "score_all": float(np.mean(corrs_all)) if corrs_all else float("nan"),
+            "score_omni": float(np.mean(corrs_omni)) if corrs_omni else float("nan"),
+        })
+
+    return pd.DataFrame(rows).sort_values("score_all", ascending=False).reset_index(drop=True)
 
 
 # --------------------------------------------------------------------------

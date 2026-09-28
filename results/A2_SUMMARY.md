@@ -6,10 +6,32 @@ Full tables: `results/localization_regression.csv`, `results/localization_baseli
 `results/threshold_detector.csv`; MLP/Threshold rows appended to
 `results/table1_primary.csv` and `results/final_holdout.csv`.
 
-**Geometry note:** `eval_protocol.SENSOR_POSITIONS` (sensor_1..sensor_4 → E/N/W/S) is
-**unconfirmed** (`SENSOR_POSITIONS_CONFIRMED = False`) — see
-`eval_protocol.diagnostic_sensor_direction_rssi()`. Only R2.2(b) WCL and R2.2(c)
-trilateration depend on it; their numbers below are **provisional**.
+**Geometry note (updated):** `eval_protocol.SENSOR_POSITIONS` (sensor_1..sensor_4 →
+E/N/W/S) is now **sensor mapping inferred from data** (best of 24 permutations, score
+0.479 — see `eval_protocol.sensor_mapping_scores()`); the author's recollection of the
+mapping could not be confirmed independently, so `SENSOR_POSITIONS_CONFIRMED` stays
+`False` and `SENSOR_POSITIONS_SOURCE = "inferred_from_data"`. Only R2.2(b) WCL and
+R2.2(c) trilateration depend on it; **results with the previous provisional mapping are
+kept in a footnote below for comparison.**
+
+**Sensor mapping inference** (`results/sensor_mapping_scores.csv`, all 24 permutations
+of sensor_1..4 → {E,N,W,S}, scored by mean Pearson correlation between median attack
+RSSI and −log10(distance) from the attack point, averaged over the 48 (point, antenna)
+sessions):
+
+| Mapping (s1 s2 s3 s4) | score (all antennas) | score (omnidirectional only) |
+|---|---|---|
+| **NSEW** (s1=N, s2=S, s3=E, s4=W) — **selected** | **0.479** | **0.450** |
+| NESW | 0.393 | 0.375 |
+| NEWS | 0.371 | 0.324 |
+| ESNW | 0.176 | 0.137 |
+| NSWE | 0.159 | 0.147 |
+| WENS | 0.153 | 0.025 |
+| WNES (previous provisional mapping: s1=W, s2=N, s3=E, s4=S) | 0.119 | 0.074 |
+| EWNS (author's recollection: s1=E, s2=W, s3=N, s4=S) | −0.201 | −0.210 |
+
+The opposite pairs (1↔2, 3↔4) match the author's recollection — the axes appear rotated
+90° relative to it.
 
 ## R2.1 — Coordinate regression, evaluated on unseen positions
 
@@ -50,10 +72,10 @@ Base features (WCL, trilateration — RSSI-only methods).
 | Method | LOPO mean (m) | LOPO median (m) | LOAO mean (m) | LOAO median (m) | Position-dependent? |
 |---|---|---|---|---|---|
 | (a) Nearest centroid | 13.03 | **8.42** | 3.72 | 0.00 | No |
-| (b) WCL (raw) | 10.81 | 11.05 | 10.81 | 11.05 | Yes (provisional) |
-| (b) WCL (projected to ring) | 12.89 | 15.32 | 12.89 | 15.32 | Yes (provisional) |
-| (c) Trilateration (n fit/fold) | 13.11 | 11.84 | 12.37 | 11.21 | Yes (provisional) |
-| (c) Trilateration (fixed n=2.0) | 12.33 | 11.45 | 12.33 | 11.45 | Yes (provisional) |
+| (b) WCL (raw) | 10.06 | 10.27 | 10.06 | 10.27 | Yes (inferred mapping) |
+| (b) WCL (projected to ring) | 10.28 | 9.64 | 10.28 | 9.64 | Yes (inferred mapping) |
+| (c) Trilateration (n fit/fold) | 10.99 | 10.44 | 10.46 | 10.47 | Yes (inferred mapping) |
+| (c) Trilateration (fixed n=2.0) | 10.60 | 10.70 | 10.60 | 10.70 | Yes (inferred mapping) |
 | (d) KNN fingerprinting | 13.13 | **8.42** | 3.32 | 0.00 | No |
 
 (a) and (d) are training-free apart from the classifier itself, so they run under both
@@ -65,14 +87,27 @@ points — confirming the expected floor: under LOPO the held-out point's centro
 not exist, so the classifier always lands on a training point, and geometrically the
 nearest training point to an unseen one is almost always an immediate ring-neighbour.
 
-WCL and trilateration (10.8-13.1 m, both protocols) sit at essentially the same,
-random-guess-adjacent level regardless of protocol — expected, since they don't use
-point/antenna labels for anything but scoring; their accuracy is capped by
-(1) the accuracy of `SENSOR_POSITIONS`, currently unconfirmed, and (2) how well
-non-urban RF propagation follows the log-distance model. Fitting n per fold (mean
-n≈2.6, range 1.5-4.0) gives no consistent improvement over the fixed n=2.0 baseline —
-another sign that the position-dependent methods are limited primarily by the sensor
-geometry, not by n.
+> **Footnote — (b)/(c) with the previous provisional mapping** (s1=W, s2=N, s3=E, s4=S,
+> score 0.119), kept for comparison: WCL (raw) 10.81 m / WCL (projected) 12.89 m,
+> trilateration (n fit/fold) 13.11 m (LOPO) / 12.37 m (LOAO), trilateration (n=2.0)
+> 12.33 m — all identical between LOPO/LOAO as before, since (b)/(c) don't use labels.
+
+**Do WCL and trilateration improve with the inferred mapping? Only modestly, and they
+stay near the random-guess level.** WCL (raw) improves from 10.81 to 10.06 m and WCL
+(projected) improves substantially, from 12.89 to 10.28 m; trilateration improves by
+about 1-2 m across the board. But every (b)/(c) number is still within 4 m of the 14.0 m
+random-guess line, and **far** worse than the label-based methods at a seen position
+((a)/(d) under LOAO: 3.3-3.7 m) — switching to the best-scoring sensor mapping does not
+turn WCL/trilateration into usable localizers here. The most likely reason: `sensor_1`
+through `sensor_4` monitor the AP's own BSSID, so during an attack the RSSI they report
+is a **mixture of the legitimate AP's and the rogue twin's signal on the same channel**,
+not a clean single-transmitter measurement — which breaks the single-emitter
+log-distance model that WCL and trilateration both assume, regardless of how accurate
+`SENSOR_POSITIONS` is. Fitting n per fold (mean n≈2.5, tightly clustered around 2.4-2.5
+with the inferred mapping, vs. 1.5-4.0 scattered with the old one) no longer wanders
+across the whole allowed range — a sign the inferred mapping is at least *more*
+consistent with a log-distance model, even though the residual mixture-signal problem
+caps how far that consistency can take the localization accuracy.
 
 ## R2.3 — MLP classifier
 
