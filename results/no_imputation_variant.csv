@@ -1,0 +1,4 @@
+task,model,feature_set,pooled_acc_imputed,pooled_acc_no_imputation,delta,n_rows_imputed,n_rows_no_imputation
+Attack Detection,KNN,Base (4),0.988268418582825,0.9751131221719457,-0.013155296410879314,2131,442
+Point Prediction,KNN,FE (13),0.7425569176882661,0.75,0.007443082311733851,571,116
+Antenna Prediction,XGBoost,Base (4),0.3625218914185639,0.3879310344827586,0.025409143064194728,571,116

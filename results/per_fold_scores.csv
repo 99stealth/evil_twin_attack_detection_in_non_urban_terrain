@@ -1,0 +1,361 @@
+Model,Feature Set,Task,Fold,Accuracy
+Logistic Regression,Base (4),Attack Detection,0,0.9856733524355301
+Logistic Regression,Base (4),Attack Detection,1,0.9791666666666666
+Logistic Regression,Base (4),Attack Detection,2,0.9910979228486647
+Logistic Regression,Base (4),Attack Detection,3,0.9839228295819936
+Logistic Regression,Base (4),Attack Detection,4,0.9890829694323144
+Logistic Regression,Base (4),Attack Detection,5,0.9911764705882353
+SVM (RBF),Base (4),Attack Detection,0,0.9799426934097422
+SVM (RBF),Base (4),Attack Detection,1,0.9821428571428571
+SVM (RBF),Base (4),Attack Detection,2,0.9881305637982196
+SVM (RBF),Base (4),Attack Detection,3,0.9871382636655949
+SVM (RBF),Base (4),Attack Detection,4,0.9890829694323144
+SVM (RBF),Base (4),Attack Detection,5,0.9911764705882353
+KNN,Base (4),Attack Detection,0,0.9856733524355301
+KNN,Base (4),Attack Detection,1,0.9880952380952381
+KNN,Base (4),Attack Detection,2,0.9881305637982196
+KNN,Base (4),Attack Detection,3,0.9871382636655949
+KNN,Base (4),Attack Detection,4,0.9890829694323144
+KNN,Base (4),Attack Detection,5,0.9911764705882353
+Decision Tree,Base (4),Attack Detection,0,0.9799426934097422
+Decision Tree,Base (4),Attack Detection,1,0.9761904761904762
+Decision Tree,Base (4),Attack Detection,2,0.9851632047477745
+Decision Tree,Base (4),Attack Detection,3,0.9871382636655949
+Decision Tree,Base (4),Attack Detection,4,0.9847161572052402
+Decision Tree,Base (4),Attack Detection,5,0.9911764705882353
+Random Forest,Base (4),Attack Detection,0,0.9856733524355301
+Random Forest,Base (4),Attack Detection,1,0.9821428571428571
+Random Forest,Base (4),Attack Detection,2,0.9881305637982196
+Random Forest,Base (4),Attack Detection,3,0.9903536977491961
+Random Forest,Base (4),Attack Detection,4,0.9868995633187773
+Random Forest,Base (4),Attack Detection,5,0.9911764705882353
+Extra Trees,Base (4),Attack Detection,0,0.9885386819484241
+Extra Trees,Base (4),Attack Detection,1,0.9821428571428571
+Extra Trees,Base (4),Attack Detection,2,0.9910979228486647
+Extra Trees,Base (4),Attack Detection,3,0.9871382636655949
+Extra Trees,Base (4),Attack Detection,4,0.9890829694323144
+Extra Trees,Base (4),Attack Detection,5,0.9911764705882353
+XGBoost,Base (4),Attack Detection,0,0.9856733524355301
+XGBoost,Base (4),Attack Detection,1,0.9851190476190477
+XGBoost,Base (4),Attack Detection,2,0.9881305637982196
+XGBoost,Base (4),Attack Detection,3,0.9839228295819936
+XGBoost,Base (4),Attack Detection,4,0.9847161572052402
+XGBoost,Base (4),Attack Detection,5,0.9911764705882353
+LightGBM,Base (4),Attack Detection,0,0.9885386819484241
+LightGBM,Base (4),Attack Detection,1,0.9821428571428571
+LightGBM,Base (4),Attack Detection,2,0.9910979228486647
+LightGBM,Base (4),Attack Detection,3,0.9871382636655949
+LightGBM,Base (4),Attack Detection,4,0.980349344978166
+LightGBM,Base (4),Attack Detection,5,0.9882352941176471
+CatBoost,Base (4),Attack Detection,0,0.9885386819484241
+CatBoost,Base (4),Attack Detection,1,0.9880952380952381
+CatBoost,Base (4),Attack Detection,2,0.9910979228486647
+CatBoost,Base (4),Attack Detection,3,0.9871382636655949
+CatBoost,Base (4),Attack Detection,4,0.9847161572052402
+CatBoost,Base (4),Attack Detection,5,0.9911764705882353
+Logistic Regression,Base (4),Point Prediction,0,0.6881720430107527
+Logistic Regression,Base (4),Point Prediction,1,0.5164835164835165
+Logistic Regression,Base (4),Point Prediction,2,0.8842105263157894
+Logistic Regression,Base (4),Point Prediction,3,0.49019607843137253
+Logistic Regression,Base (4),Point Prediction,4,0.8021978021978022
+Logistic Regression,Base (4),Point Prediction,5,0.8686868686868687
+SVM (RBF),Base (4),Point Prediction,0,0.5806451612903226
+SVM (RBF),Base (4),Point Prediction,1,0.5384615384615384
+SVM (RBF),Base (4),Point Prediction,2,0.7684210526315789
+SVM (RBF),Base (4),Point Prediction,3,0.5196078431372549
+SVM (RBF),Base (4),Point Prediction,4,0.8241758241758241
+SVM (RBF),Base (4),Point Prediction,5,0.8585858585858586
+KNN,Base (4),Point Prediction,0,0.6666666666666666
+KNN,Base (4),Point Prediction,1,0.5604395604395604
+KNN,Base (4),Point Prediction,2,0.7894736842105263
+KNN,Base (4),Point Prediction,3,0.5686274509803921
+KNN,Base (4),Point Prediction,4,0.8791208791208791
+KNN,Base (4),Point Prediction,5,0.8484848484848485
+Decision Tree,Base (4),Point Prediction,0,0.5591397849462365
+Decision Tree,Base (4),Point Prediction,1,0.43956043956043955
+Decision Tree,Base (4),Point Prediction,2,0.5684210526315789
+Decision Tree,Base (4),Point Prediction,3,0.6078431372549019
+Decision Tree,Base (4),Point Prediction,4,0.7472527472527473
+Decision Tree,Base (4),Point Prediction,5,0.7171717171717171
+Random Forest,Base (4),Point Prediction,0,0.6666666666666666
+Random Forest,Base (4),Point Prediction,1,0.4725274725274725
+Random Forest,Base (4),Point Prediction,2,0.7789473684210526
+Random Forest,Base (4),Point Prediction,3,0.6078431372549019
+Random Forest,Base (4),Point Prediction,4,0.8791208791208791
+Random Forest,Base (4),Point Prediction,5,0.8080808080808081
+Extra Trees,Base (4),Point Prediction,0,0.6666666666666666
+Extra Trees,Base (4),Point Prediction,1,0.5274725274725275
+Extra Trees,Base (4),Point Prediction,2,0.8526315789473684
+Extra Trees,Base (4),Point Prediction,3,0.6176470588235294
+Extra Trees,Base (4),Point Prediction,4,0.8021978021978022
+Extra Trees,Base (4),Point Prediction,5,0.8181818181818182
+XGBoost,Base (4),Point Prediction,0,0.6451612903225806
+XGBoost,Base (4),Point Prediction,1,0.4835164835164835
+XGBoost,Base (4),Point Prediction,2,0.631578947368421
+XGBoost,Base (4),Point Prediction,3,0.5098039215686274
+XGBoost,Base (4),Point Prediction,4,0.8461538461538461
+XGBoost,Base (4),Point Prediction,5,0.7878787878787878
+LightGBM,Base (4),Point Prediction,0,0.6344086021505376
+LightGBM,Base (4),Point Prediction,1,0.5274725274725275
+LightGBM,Base (4),Point Prediction,2,0.7894736842105263
+LightGBM,Base (4),Point Prediction,3,0.5196078431372549
+LightGBM,Base (4),Point Prediction,4,0.8791208791208791
+LightGBM,Base (4),Point Prediction,5,0.7878787878787878
+CatBoost,Base (4),Point Prediction,0,0.6451612903225806
+CatBoost,Base (4),Point Prediction,1,0.4725274725274725
+CatBoost,Base (4),Point Prediction,2,0.7894736842105263
+CatBoost,Base (4),Point Prediction,3,0.6568627450980392
+CatBoost,Base (4),Point Prediction,4,0.7912087912087912
+CatBoost,Base (4),Point Prediction,5,0.8282828282828283
+Logistic Regression,Base (4),Antenna Prediction,0,0.2
+Logistic Regression,Base (4),Antenna Prediction,1,0.44285714285714284
+Logistic Regression,Base (4),Antenna Prediction,2,0.5064935064935064
+Logistic Regression,Base (4),Antenna Prediction,3,0.3611111111111111
+Logistic Regression,Base (4),Antenna Prediction,4,0.18571428571428572
+Logistic Regression,Base (4),Antenna Prediction,5,0.2898550724637681
+Logistic Regression,Base (4),Antenna Prediction,6,0.2
+Logistic Regression,Base (4),Antenna Prediction,7,0.5753424657534246
+SVM (RBF),Base (4),Antenna Prediction,0,0.2714285714285714
+SVM (RBF),Base (4),Antenna Prediction,1,0.2571428571428571
+SVM (RBF),Base (4),Antenna Prediction,2,0.4805194805194805
+SVM (RBF),Base (4),Antenna Prediction,3,0.3333333333333333
+SVM (RBF),Base (4),Antenna Prediction,4,0.17142857142857143
+SVM (RBF),Base (4),Antenna Prediction,5,0.13043478260869565
+SVM (RBF),Base (4),Antenna Prediction,6,0.2714285714285714
+SVM (RBF),Base (4),Antenna Prediction,7,0.4794520547945205
+KNN,Base (4),Antenna Prediction,0,0.2571428571428571
+KNN,Base (4),Antenna Prediction,1,0.2714285714285714
+KNN,Base (4),Antenna Prediction,2,0.3246753246753247
+KNN,Base (4),Antenna Prediction,3,0.2777777777777778
+KNN,Base (4),Antenna Prediction,4,0.17142857142857143
+KNN,Base (4),Antenna Prediction,5,0.2463768115942029
+KNN,Base (4),Antenna Prediction,6,0.32857142857142857
+KNN,Base (4),Antenna Prediction,7,0.3561643835616438
+Decision Tree,Base (4),Antenna Prediction,0,0.18571428571428572
+Decision Tree,Base (4),Antenna Prediction,1,0.35714285714285715
+Decision Tree,Base (4),Antenna Prediction,2,0.3116883116883117
+Decision Tree,Base (4),Antenna Prediction,3,0.3472222222222222
+Decision Tree,Base (4),Antenna Prediction,4,0.2857142857142857
+Decision Tree,Base (4),Antenna Prediction,5,0.3333333333333333
+Decision Tree,Base (4),Antenna Prediction,6,0.22857142857142856
+Decision Tree,Base (4),Antenna Prediction,7,0.4794520547945205
+Random Forest,Base (4),Antenna Prediction,0,0.17142857142857143
+Random Forest,Base (4),Antenna Prediction,1,0.32857142857142857
+Random Forest,Base (4),Antenna Prediction,2,0.36363636363636365
+Random Forest,Base (4),Antenna Prediction,3,0.25
+Random Forest,Base (4),Antenna Prediction,4,0.3142857142857143
+Random Forest,Base (4),Antenna Prediction,5,0.17391304347826086
+Random Forest,Base (4),Antenna Prediction,6,0.32857142857142857
+Random Forest,Base (4),Antenna Prediction,7,0.3561643835616438
+Extra Trees,Base (4),Antenna Prediction,0,0.17142857142857143
+Extra Trees,Base (4),Antenna Prediction,1,0.35714285714285715
+Extra Trees,Base (4),Antenna Prediction,2,0.38961038961038963
+Extra Trees,Base (4),Antenna Prediction,3,0.2638888888888889
+Extra Trees,Base (4),Antenna Prediction,4,0.18571428571428572
+Extra Trees,Base (4),Antenna Prediction,5,0.2898550724637681
+Extra Trees,Base (4),Antenna Prediction,6,0.4
+Extra Trees,Base (4),Antenna Prediction,7,0.4931506849315068
+XGBoost,Base (4),Antenna Prediction,0,0.21428571428571427
+XGBoost,Base (4),Antenna Prediction,1,0.34285714285714286
+XGBoost,Base (4),Antenna Prediction,2,0.6103896103896104
+XGBoost,Base (4),Antenna Prediction,3,0.2638888888888889
+XGBoost,Base (4),Antenna Prediction,4,0.45714285714285713
+XGBoost,Base (4),Antenna Prediction,5,0.3333333333333333
+XGBoost,Base (4),Antenna Prediction,6,0.2714285714285714
+XGBoost,Base (4),Antenna Prediction,7,0.3835616438356164
+LightGBM,Base (4),Antenna Prediction,0,0.2714285714285714
+LightGBM,Base (4),Antenna Prediction,1,0.2857142857142857
+LightGBM,Base (4),Antenna Prediction,2,0.4935064935064935
+LightGBM,Base (4),Antenna Prediction,3,0.2361111111111111
+LightGBM,Base (4),Antenna Prediction,4,0.32857142857142857
+LightGBM,Base (4),Antenna Prediction,5,0.2028985507246377
+LightGBM,Base (4),Antenna Prediction,6,0.3142857142857143
+LightGBM,Base (4),Antenna Prediction,7,0.3287671232876712
+CatBoost,Base (4),Antenna Prediction,0,0.18571428571428572
+CatBoost,Base (4),Antenna Prediction,1,0.45714285714285713
+CatBoost,Base (4),Antenna Prediction,2,0.45454545454545453
+CatBoost,Base (4),Antenna Prediction,3,0.2777777777777778
+CatBoost,Base (4),Antenna Prediction,4,0.21428571428571427
+CatBoost,Base (4),Antenna Prediction,5,0.18840579710144928
+CatBoost,Base (4),Antenna Prediction,6,0.22857142857142856
+CatBoost,Base (4),Antenna Prediction,7,0.4794520547945205
+Logistic Regression,FE (13),Attack Detection,0,0.9856733524355301
+Logistic Regression,FE (13),Attack Detection,1,0.9791666666666666
+Logistic Regression,FE (13),Attack Detection,2,0.9910979228486647
+Logistic Regression,FE (13),Attack Detection,3,0.9807073954983923
+Logistic Regression,FE (13),Attack Detection,4,0.9868995633187773
+Logistic Regression,FE (13),Attack Detection,5,0.9911764705882353
+SVM (RBF),FE (13),Attack Detection,0,0.9828080229226361
+SVM (RBF),FE (13),Attack Detection,1,0.9821428571428571
+SVM (RBF),FE (13),Attack Detection,2,0.9910979228486647
+SVM (RBF),FE (13),Attack Detection,3,0.9839228295819936
+SVM (RBF),FE (13),Attack Detection,4,0.9912663755458515
+SVM (RBF),FE (13),Attack Detection,5,0.9911764705882353
+KNN,FE (13),Attack Detection,0,0.9856733524355301
+KNN,FE (13),Attack Detection,1,0.9880952380952381
+KNN,FE (13),Attack Detection,2,0.9881305637982196
+KNN,FE (13),Attack Detection,3,0.9839228295819936
+KNN,FE (13),Attack Detection,4,0.9890829694323144
+KNN,FE (13),Attack Detection,5,0.9882352941176471
+Decision Tree,FE (13),Attack Detection,0,0.9684813753581661
+Decision Tree,FE (13),Attack Detection,1,0.9851190476190477
+Decision Tree,FE (13),Attack Detection,2,0.9821958456973294
+Decision Tree,FE (13),Attack Detection,3,0.9871382636655949
+Decision Tree,FE (13),Attack Detection,4,0.9912663755458515
+Decision Tree,FE (13),Attack Detection,5,0.9882352941176471
+Random Forest,FE (13),Attack Detection,0,0.9885386819484241
+Random Forest,FE (13),Attack Detection,1,0.9821428571428571
+Random Forest,FE (13),Attack Detection,2,0.9910979228486647
+Random Forest,FE (13),Attack Detection,3,0.9871382636655949
+Random Forest,FE (13),Attack Detection,4,0.9890829694323144
+Random Forest,FE (13),Attack Detection,5,0.9911764705882353
+Extra Trees,FE (13),Attack Detection,0,0.9856733524355301
+Extra Trees,FE (13),Attack Detection,1,0.9821428571428571
+Extra Trees,FE (13),Attack Detection,2,0.9910979228486647
+Extra Trees,FE (13),Attack Detection,3,0.9871382636655949
+Extra Trees,FE (13),Attack Detection,4,0.9890829694323144
+Extra Trees,FE (13),Attack Detection,5,0.9911764705882353
+XGBoost,FE (13),Attack Detection,0,0.9856733524355301
+XGBoost,FE (13),Attack Detection,1,0.9821428571428571
+XGBoost,FE (13),Attack Detection,2,0.9881305637982196
+XGBoost,FE (13),Attack Detection,3,0.9871382636655949
+XGBoost,FE (13),Attack Detection,4,0.9890829694323144
+XGBoost,FE (13),Attack Detection,5,0.9911764705882353
+LightGBM,FE (13),Attack Detection,0,0.9828080229226361
+LightGBM,FE (13),Attack Detection,1,0.9851190476190477
+LightGBM,FE (13),Attack Detection,2,0.9910979228486647
+LightGBM,FE (13),Attack Detection,3,0.9871382636655949
+LightGBM,FE (13),Attack Detection,4,0.9847161572052402
+LightGBM,FE (13),Attack Detection,5,0.9911764705882353
+CatBoost,FE (13),Attack Detection,0,0.9885386819484241
+CatBoost,FE (13),Attack Detection,1,0.9821428571428571
+CatBoost,FE (13),Attack Detection,2,0.9910979228486647
+CatBoost,FE (13),Attack Detection,3,0.9871382636655949
+CatBoost,FE (13),Attack Detection,4,0.9890829694323144
+CatBoost,FE (13),Attack Detection,5,0.9911764705882353
+Logistic Regression,FE (13),Point Prediction,0,0.6666666666666666
+Logistic Regression,FE (13),Point Prediction,1,0.5274725274725275
+Logistic Regression,FE (13),Point Prediction,2,0.8631578947368421
+Logistic Regression,FE (13),Point Prediction,3,0.49019607843137253
+Logistic Regression,FE (13),Point Prediction,4,0.9120879120879121
+Logistic Regression,FE (13),Point Prediction,5,0.8888888888888888
+SVM (RBF),FE (13),Point Prediction,0,0.6989247311827957
+SVM (RBF),FE (13),Point Prediction,1,0.5934065934065934
+SVM (RBF),FE (13),Point Prediction,2,0.8526315789473684
+SVM (RBF),FE (13),Point Prediction,3,0.5
+SVM (RBF),FE (13),Point Prediction,4,0.8351648351648352
+SVM (RBF),FE (13),Point Prediction,5,0.8585858585858586
+KNN,FE (13),Point Prediction,0,0.6236559139784946
+KNN,FE (13),Point Prediction,1,0.6593406593406593
+KNN,FE (13),Point Prediction,2,0.8421052631578947
+KNN,FE (13),Point Prediction,3,0.5882352941176471
+KNN,FE (13),Point Prediction,4,0.9120879120879121
+KNN,FE (13),Point Prediction,5,0.8383838383838383
+Decision Tree,FE (13),Point Prediction,0,0.6129032258064516
+Decision Tree,FE (13),Point Prediction,1,0.4835164835164835
+Decision Tree,FE (13),Point Prediction,2,0.8842105263157894
+Decision Tree,FE (13),Point Prediction,3,0.47058823529411764
+Decision Tree,FE (13),Point Prediction,4,0.8131868131868132
+Decision Tree,FE (13),Point Prediction,5,0.8282828282828283
+Random Forest,FE (13),Point Prediction,0,0.6881720430107527
+Random Forest,FE (13),Point Prediction,1,0.6043956043956044
+Random Forest,FE (13),Point Prediction,2,0.8631578947368421
+Random Forest,FE (13),Point Prediction,3,0.5784313725490197
+Random Forest,FE (13),Point Prediction,4,0.8461538461538461
+Random Forest,FE (13),Point Prediction,5,0.8484848484848485
+Extra Trees,FE (13),Point Prediction,0,0.6881720430107527
+Extra Trees,FE (13),Point Prediction,1,0.6373626373626373
+Extra Trees,FE (13),Point Prediction,2,0.8421052631578947
+Extra Trees,FE (13),Point Prediction,3,0.5392156862745098
+Extra Trees,FE (13),Point Prediction,4,0.8901098901098901
+Extra Trees,FE (13),Point Prediction,5,0.8484848484848485
+XGBoost,FE (13),Point Prediction,0,0.6774193548387096
+XGBoost,FE (13),Point Prediction,1,0.5714285714285714
+XGBoost,FE (13),Point Prediction,2,0.8421052631578947
+XGBoost,FE (13),Point Prediction,3,0.45098039215686275
+XGBoost,FE (13),Point Prediction,4,0.8461538461538461
+XGBoost,FE (13),Point Prediction,5,0.8181818181818182
+LightGBM,FE (13),Point Prediction,0,0.6989247311827957
+LightGBM,FE (13),Point Prediction,1,0.6043956043956044
+LightGBM,FE (13),Point Prediction,2,0.8315789473684211
+LightGBM,FE (13),Point Prediction,3,0.46078431372549017
+LightGBM,FE (13),Point Prediction,4,0.8241758241758241
+LightGBM,FE (13),Point Prediction,5,0.8080808080808081
+CatBoost,FE (13),Point Prediction,0,0.6881720430107527
+CatBoost,FE (13),Point Prediction,1,0.5934065934065934
+CatBoost,FE (13),Point Prediction,2,0.8526315789473684
+CatBoost,FE (13),Point Prediction,3,0.6176470588235294
+CatBoost,FE (13),Point Prediction,4,0.8131868131868132
+CatBoost,FE (13),Point Prediction,5,0.8484848484848485
+Logistic Regression,FE (13),Antenna Prediction,0,0.18571428571428572
+Logistic Regression,FE (13),Antenna Prediction,1,0.3
+Logistic Regression,FE (13),Antenna Prediction,2,0.44155844155844154
+Logistic Regression,FE (13),Antenna Prediction,3,0.19444444444444445
+Logistic Regression,FE (13),Antenna Prediction,4,0.21428571428571427
+Logistic Regression,FE (13),Antenna Prediction,5,0.3188405797101449
+Logistic Regression,FE (13),Antenna Prediction,6,0.24285714285714285
+Logistic Regression,FE (13),Antenna Prediction,7,0.5753424657534246
+SVM (RBF),FE (13),Antenna Prediction,0,0.18571428571428572
+SVM (RBF),FE (13),Antenna Prediction,1,0.32857142857142857
+SVM (RBF),FE (13),Antenna Prediction,2,0.42857142857142855
+SVM (RBF),FE (13),Antenna Prediction,3,0.2916666666666667
+SVM (RBF),FE (13),Antenna Prediction,4,0.2714285714285714
+SVM (RBF),FE (13),Antenna Prediction,5,0.21739130434782608
+SVM (RBF),FE (13),Antenna Prediction,6,0.24285714285714285
+SVM (RBF),FE (13),Antenna Prediction,7,0.3698630136986301
+KNN,FE (13),Antenna Prediction,0,0.2714285714285714
+KNN,FE (13),Antenna Prediction,1,0.22857142857142856
+KNN,FE (13),Antenna Prediction,2,0.35064935064935066
+KNN,FE (13),Antenna Prediction,3,0.2361111111111111
+KNN,FE (13),Antenna Prediction,4,0.2571428571428571
+KNN,FE (13),Antenna Prediction,5,0.2463768115942029
+KNN,FE (13),Antenna Prediction,6,0.3
+KNN,FE (13),Antenna Prediction,7,0.3561643835616438
+Decision Tree,FE (13),Antenna Prediction,0,0.15714285714285714
+Decision Tree,FE (13),Antenna Prediction,1,0.2
+Decision Tree,FE (13),Antenna Prediction,2,0.22077922077922077
+Decision Tree,FE (13),Antenna Prediction,3,0.3472222222222222
+Decision Tree,FE (13),Antenna Prediction,4,0.21428571428571427
+Decision Tree,FE (13),Antenna Prediction,5,0.15942028985507245
+Decision Tree,FE (13),Antenna Prediction,6,0.15714285714285714
+Decision Tree,FE (13),Antenna Prediction,7,0.3424657534246575
+Random Forest,FE (13),Antenna Prediction,0,0.17142857142857143
+Random Forest,FE (13),Antenna Prediction,1,0.32857142857142857
+Random Forest,FE (13),Antenna Prediction,2,0.4155844155844156
+Random Forest,FE (13),Antenna Prediction,3,0.2222222222222222
+Random Forest,FE (13),Antenna Prediction,4,0.2571428571428571
+Random Forest,FE (13),Antenna Prediction,5,0.2608695652173913
+Random Forest,FE (13),Antenna Prediction,6,0.2714285714285714
+Random Forest,FE (13),Antenna Prediction,7,0.4794520547945205
+Extra Trees,FE (13),Antenna Prediction,0,0.17142857142857143
+Extra Trees,FE (13),Antenna Prediction,1,0.2714285714285714
+Extra Trees,FE (13),Antenna Prediction,2,0.45454545454545453
+Extra Trees,FE (13),Antenna Prediction,3,0.2777777777777778
+Extra Trees,FE (13),Antenna Prediction,4,0.2
+Extra Trees,FE (13),Antenna Prediction,5,0.3333333333333333
+Extra Trees,FE (13),Antenna Prediction,6,0.2857142857142857
+Extra Trees,FE (13),Antenna Prediction,7,0.5753424657534246
+XGBoost,FE (13),Antenna Prediction,0,0.17142857142857143
+XGBoost,FE (13),Antenna Prediction,1,0.3142857142857143
+XGBoost,FE (13),Antenna Prediction,2,0.45454545454545453
+XGBoost,FE (13),Antenna Prediction,3,0.3333333333333333
+XGBoost,FE (13),Antenna Prediction,4,0.32857142857142857
+XGBoost,FE (13),Antenna Prediction,5,0.2898550724637681
+XGBoost,FE (13),Antenna Prediction,6,0.35714285714285715
+XGBoost,FE (13),Antenna Prediction,7,0.4931506849315068
+LightGBM,FE (13),Antenna Prediction,0,0.2571428571428571
+LightGBM,FE (13),Antenna Prediction,1,0.2714285714285714
+LightGBM,FE (13),Antenna Prediction,2,0.35064935064935066
+LightGBM,FE (13),Antenna Prediction,3,0.2916666666666667
+LightGBM,FE (13),Antenna Prediction,4,0.37142857142857144
+LightGBM,FE (13),Antenna Prediction,5,0.2463768115942029
+LightGBM,FE (13),Antenna Prediction,6,0.24285714285714285
+LightGBM,FE (13),Antenna Prediction,7,0.4657534246575342
+CatBoost,FE (13),Antenna Prediction,0,0.17142857142857143
+CatBoost,FE (13),Antenna Prediction,1,0.3
+CatBoost,FE (13),Antenna Prediction,2,0.36363636363636365
+CatBoost,FE (13),Antenna Prediction,3,0.2361111111111111
+CatBoost,FE (13),Antenna Prediction,4,0.2
+CatBoost,FE (13),Antenna Prediction,5,0.2028985507246377
+CatBoost,FE (13),Antenna Prediction,6,0.2714285714285714
+CatBoost,FE (13),Antenna Prediction,7,0.5068493150684932
