@@ -1,0 +1,57 @@
+Freq,Task,Model,Protocol,Accuracy,Macro F1
+5s,Attack Detection,Extra Trees (FE),Shuffled 5-fold,0.9855,0.9815
+5s,Attack Detection,Extra Trees (FE),Legacy unshuffled 5-fold,0.9883,0.9851
+5s,Attack Detection,Extra Trees (FE),Primary (grouped LOGO),0.9878,0.9845
+5s,Attack Detection,Extra Trees (FE),LOSO (session),0.9855,0.9815
+5s,Attack Detection,CatBoost (Base),Shuffled 5-fold,0.9873,0.9839
+5s,Attack Detection,CatBoost (Base),Legacy unshuffled 5-fold,0.9878,0.9845
+5s,Attack Detection,CatBoost (Base),Primary (grouped LOGO),0.9878,0.9845
+5s,Attack Detection,CatBoost (Base),LOSO (session),0.9873,0.9838
+5s,Attack Detection,Threshold baseline (mean_rssi),Shuffled 5-fold,0.9859,0.9821
+5s,Attack Detection,Threshold baseline (mean_rssi),Legacy unshuffled 5-fold,0.9883,0.9851
+5s,Attack Detection,Threshold baseline (mean_rssi),Primary (grouped LOGO),0.9883,0.9851
+5s,Attack Detection,Threshold baseline (mean_rssi),LOSO (session),0.9883,0.9851
+5s,Point Prediction,Extra Trees (FE),Shuffled 5-fold,0.8967,0.897
+5s,Point Prediction,Extra Trees (FE),Legacy unshuffled 5-fold,0.8161,0.8154
+5s,Point Prediction,Extra Trees (FE),Primary (grouped LOGO),0.7356,0.7378
+5s,Point Prediction,Extra Trees (FE),LOSO (session),0.69,0.6925
+5s,Point Prediction,CatBoost (Base),Shuffled 5-fold,0.8914,0.8919
+5s,Point Prediction,CatBoost (Base),Legacy unshuffled 5-fold,0.8074,0.8079
+5s,Point Prediction,CatBoost (Base),Primary (grouped LOGO),0.7268,0.7284
+5s,Point Prediction,CatBoost (Base),LOSO (session),0.683,0.685
+5s,Antenna Prediction,Extra Trees (FE),Shuffled 5-fold,0.8231,0.8218
+5s,Antenna Prediction,Extra Trees (FE),Legacy unshuffled 5-fold,0.4816,0.4789
+5s,Antenna Prediction,Extra Trees (FE),Primary (grouped LOGO),0.3363,0.3066
+5s,Antenna Prediction,Extra Trees (FE),LOSO (session),0.1156,0.1136
+5s,Antenna Prediction,CatBoost (Base),Shuffled 5-fold,0.7881,0.7864
+5s,Antenna Prediction,CatBoost (Base),Legacy unshuffled 5-fold,0.4343,0.43
+5s,Antenna Prediction,CatBoost (Base),Primary (grouped LOGO),0.3187,0.3021
+5s,Antenna Prediction,CatBoost (Base),LOSO (session),0.1121,0.1106
+10s,Attack Detection,Extra Trees (FE),Shuffled 5-fold,0.9747,0.9678
+10s,Attack Detection,Extra Trees (FE),Legacy unshuffled 5-fold,0.9728,0.9655
+10s,Attack Detection,Extra Trees (FE),Primary (grouped LOGO),0.9756,0.9691
+10s,Attack Detection,Extra Trees (FE),LOSO (session),0.9719,0.9642
+10s,Attack Detection,CatBoost (Base),Shuffled 5-fold,0.9737,0.9666
+10s,Attack Detection,CatBoost (Base),Legacy unshuffled 5-fold,0.9719,0.964
+10s,Attack Detection,CatBoost (Base),Primary (grouped LOGO),0.9737,0.9665
+10s,Attack Detection,CatBoost (Base),LOSO (session),0.9681,0.9592
+10s,Attack Detection,Threshold baseline (mean_rssi),Shuffled 5-fold,0.9747,0.9677
+10s,Attack Detection,Threshold baseline (mean_rssi),Legacy unshuffled 5-fold,0.9756,0.9689
+10s,Attack Detection,Threshold baseline (mean_rssi),Primary (grouped LOGO),0.9765,0.9702
+10s,Attack Detection,Threshold baseline (mean_rssi),LOSO (session),0.9756,0.9689
+10s,Point Prediction,Extra Trees (FE),Shuffled 5-fold,0.8163,0.8189
+10s,Point Prediction,Extra Trees (FE),Legacy unshuffled 5-fold,0.7491,0.7505
+10s,Point Prediction,Extra Trees (FE),Primary (grouped LOGO),0.7067,0.7108
+10s,Point Prediction,Extra Trees (FE),LOSO (session),0.6572,0.6632
+10s,Point Prediction,CatBoost (Base),Shuffled 5-fold,0.7986,0.8018
+10s,Point Prediction,CatBoost (Base),Legacy unshuffled 5-fold,0.7244,0.7224
+10s,Point Prediction,CatBoost (Base),Primary (grouped LOGO),0.6678,0.669
+10s,Point Prediction,CatBoost (Base),LOSO (session),0.6219,0.6292
+10s,Antenna Prediction,Extra Trees (FE),Shuffled 5-fold,0.7173,0.7136
+10s,Antenna Prediction,Extra Trees (FE),Legacy unshuffled 5-fold,0.47,0.4673
+10s,Antenna Prediction,Extra Trees (FE),Primary (grouped LOGO),0.3251,0.3095
+10s,Antenna Prediction,Extra Trees (FE),LOSO (session),0.1272,0.1251
+10s,Antenna Prediction,CatBoost (Base),Shuffled 5-fold,0.6396,0.6336
+10s,Antenna Prediction,CatBoost (Base),Legacy unshuffled 5-fold,0.3781,0.3731
+10s,Antenna Prediction,CatBoost (Base),Primary (grouped LOGO),0.3251,0.3135
+10s,Antenna Prediction,CatBoost (Base),LOSO (session),0.1237,0.1244

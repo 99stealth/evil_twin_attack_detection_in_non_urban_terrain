@@ -1,0 +1,18 @@
+task,level,accuracy,n,kind,window,false_alarms_per_hour,detection_rate,median_delay_s,row_recall,n_attack_sessions,n_detected
+Point Prediction,session majority vote (n=48),0.8958333333333334,48.0,session_level,,,,,,,
+Antenna Prediction,session majority vote (n=48),0.3541666666666667,48.0,session_level,,,,,,,
+Point Prediction,sample level (no aggregation),0.7425569176882661,571.0,session_level,,,,,,,
+Antenna Prediction,sample level (no aggregation),0.36252189141856395,571.0,session_level,,,,,,,
+Point Prediction,,0.7425569176882661,,sliding_window,1.0,,,,,,
+Point Prediction,,0.7425569176882661,,sliding_window,2.0,,,,,,
+Point Prediction,,0.7845884413309983,,sliding_window,3.0,,,,,,
+Point Prediction,,0.7845884413309983,,sliding_window,6.0,,,,,,
+Point Prediction,,0.8178633975481612,,sliding_window,12.0,,,,,,
+Antenna Prediction,,0.36252189141856395,,sliding_window,1.0,,,,,,
+Antenna Prediction,,0.36252189141856395,,sliding_window,2.0,,,,,,
+Antenna Prediction,,0.37653239929947463,,sliding_window,3.0,,,,,,
+Antenna Prediction,,0.37653239929947463,,sliding_window,6.0,,,,,,
+Antenna Prediction,,0.404553415061296,,sliding_window,12.0,,,,,,
+Attack Detection,,,,false_alarm_and_detection,1.0,4.615384615384616,1.0,0.0,0.9737302977232924,48.0,48.0
+Attack Detection,,,,false_alarm_and_detection,2.0,0.0,1.0,5.0,0.8896672504378283,48.0,48.0
+Attack Detection,,,,false_alarm_and_detection,3.0,0.0,1.0,10.0,0.8056042031523643,48.0,48.0

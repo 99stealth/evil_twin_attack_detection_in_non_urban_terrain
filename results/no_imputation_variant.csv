@@ -1,0 +1,7 @@
+task,model,feature_set,variant,pooled_acc_imputed,pooled_acc_variant,delta,n_rows_imputed,n_rows_variant,n_attack_sessions_imputed,n_attack_sessions_variant
+Attack Detection,KNN,Base (4),dropna_5s,0.988268418582825,0.9751131221719457,-0.013155296410879314,2131,442,48,37
+Attack Detection,KNN,Base (4),scan_cycle,0.988268418582825,0.9984338292873923,0.010165410704567335,2131,1277,48,48
+Point Prediction,KNN,FE (13),dropna_5s,0.7425569176882661,0.75,0.007443082311733851,571,116,48,37
+Point Prediction,KNN,FE (13),scan_cycle,0.7425569176882661,0.7625,0.019943082311733806,571,320,48,48
+Antenna Prediction,XGBoost,Base (4),dropna_5s,0.3625218914185639,0.3879310344827586,0.025409143064194728,571,116,48,37
+Antenna Prediction,XGBoost,Base (4),scan_cycle,0.3625218914185639,0.3125,-0.05002189141856389,571,320,48,48

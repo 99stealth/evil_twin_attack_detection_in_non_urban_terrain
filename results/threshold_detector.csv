@@ -1,0 +1,4 @@
+window,false_alarms_per_hour,detection_rate,median_delay_s,row_recall,n_attack_sessions,n_detected
+1,8.307692307692308,1.0,0.0,0.9877408056042032,48,48
+2,0.0,1.0,5.0,0.9036777583187391,48,48
+3,0.0,1.0,10.0,0.819614711033275,48,48
